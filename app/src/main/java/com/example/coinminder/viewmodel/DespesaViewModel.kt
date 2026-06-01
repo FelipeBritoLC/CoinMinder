@@ -12,20 +12,16 @@ class DespesaViewModel : ViewModel() {
 
     private val repository = DespesaRepository()
 
-    // ── Fontes de dados ─────────────────────────────────────────────
     private val _todasDespesas  = MutableStateFlow<List<Despesa>>(emptyList())
     private val _textoBusca     = MutableStateFlow("")
     private val _categoriaFiltro = MutableStateFlow<String?>(null)
 
-    // ── Estados expostos à UI ────────────────────────────────────────
     val textoBusca:     StateFlow<String>  = _textoBusca
     val categoriaFiltro: StateFlow<String?> = _categoriaFiltro
 
     private val _salvando = MutableStateFlow(false)
     val salvando: StateFlow<Boolean> = _salvando
 
-    // Lista filtrada: recalculada automaticamente quando qualquer fonte muda
-    // combine() + stateIn() transforma 3 Flows em 1 StateFlow pronto para a UI
     val despesasFiltradas: StateFlow<List<Despesa>> =
         combine(_todasDespesas, _textoBusca, _categoriaFiltro) { lista, texto, categoria ->
             lista.filter { d ->
@@ -41,14 +37,12 @@ class DespesaViewModel : ViewModel() {
 
     init { listarDespesas() }
 
-    // Inicia a escuta em tempo real do Firestore
     private fun listarDespesas() {
         viewModelScope.launch {
             repository.listarDespesas().collect { _todasDespesas.value = it }
         }
     }
 
-    // Monta o objeto e persiste no Firestore
     fun salvarDespesa(titulo: String, valor: Double, categoria: String, moeda: String, cotacao: Double) {
         viewModelScope.launch {
             _salvando.value = true
@@ -66,7 +60,7 @@ class DespesaViewModel : ViewModel() {
         }
     }
 
-    // Atualiza os filtros (chamados pela UI a cada keystroke / clique)
+
     fun onTextoBuscaChange(novo: String)    { _textoBusca.value = novo }
     fun onCategoriaFiltroChange(cat: String?) { _categoriaFiltro.value = cat }
 }
